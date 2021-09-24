@@ -1,0 +1,96 @@
+---
+title: "Sistemas de Ecuaciones en R"
+author: "Alejandro Alonso Membrilla"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+En este cuaderno vamos a mostrar una serie de ejemplo para tratar y resolver sistemas de ecuaciones lineales y no lineales utilizando R.
+
+
+<h3>Sistemas lineales</h3>
+
+Un sistema de ecuaciones lineal puede representarse mediante una matriz (de coeficientes) y un vector (de términos independientes). Usaremos los ejemplos siguientes, que definirán un sistema compatible determinado, otro incompatible, y otro compatible indeterminado respectivamente:
+
+```{r}
+A1 <- matrix(c(1, 2, -1, 2), 2, 2)
+b1 <- c(2,1)
+
+A2 <- matrix(c(1, 2, -1, 2, 1, 2), 3, 2)
+A2 <- matrix(c(1, 2, 1, -1, 2, -1), 3, 2)
+b2 <- c(2,1,1)
+
+A3 <- matrix(c(1, 2, 1, 2), 2, 2)
+b3 <- c(1,2)
+```
+
+Podemos visualizar las ecuaciones de los sistemas anteriores mediante el comando showEqn() de R:
+
+```{r}
+#install.packages("matlib")
+#NOTA: puede necesitar tener instaladas las librerías gráficas para desarrolladores 
+#(en linux las más comunes son libglu1-mesa-dev freeglut3-dev mesa-common-dev)
+library("matlib")
+```
+
+```{r}
+#Sistema compatible determinado
+showEqn(A1, b1)
+```
+
+```{r}
+#Sistema incompatible
+showEqn(A2, b2)
+```
+
+```{r}
+#Sistema compatible indeterminado
+showEqn(A3, b3)
+```
+De la misma forma, es posible visualizar las rectas definidas por cada ecuación de forma conjunta usando el comando plotEqn():
+
+```{r}
+plotEqn(A1, b1)
+plotEqn(A2, b2)
+plotEqn(A3, b3)
+```
+Finalmente, probamos a resolver cada sistema.
+
+```{r}
+#Envolvemos cada llamada a solve con try() para evitar que la ejecución aborte si 
+# encuentra un error
+s1 <- try(solve(A1,b1))
+s2 <- try(solve(A2,b2))
+s3 <- try(solve(A3,b3))
+```
+```{r}
+print(s1)
+```
+
+Como era de esperar, los sistemas definidos por A2|b2 y A3|b3 generan errores, derivados de que la matriz no sea cuadrada o tenga determinante 0.
+
+<h3>Sistemas no lineales</h3>
+En este caso utilizaremos la biblioteca 'nleqslv' de CRAN, que resuelve el sistema numéricamente mediante el método de Broyden o de Newton (para más información, consultar la [documentación](https://cran.r-project.org/web/packages/nleqslv/nleqslv.pdf)). Para su correcto funcionamiento debemos indicarle una solución inicial (puede ser aleatoria) y un vector de funciones que aplicar sobre la variable x de la misma dimensión que esta. Vemos un ejemplo a continuación:
+
+```{r}
+#install.packages("nleqslv")
+library("nleqslv")
+```
+
+```{r}
+#Una solución es (1 1)
+fn <- function(x) {
+  y <- numeric(2)
+  y[1] <- x[1]^2 + x[2]^2 - 2
+  y[2] <- exp(x[1]-1) + x[2]^3 - 2
+  y
+}
+
+xstart <- c(2,0.5)
+
+s <- nleqslv(xstart, fn)
+#Solución al sistema
+print(s$x)
+```
+
